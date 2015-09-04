@@ -156,10 +156,10 @@ NumericVector coordsToFeature(NumericMatrix coords) {
    Edge horizontalEdges[N_GRID_ROW+1][N_GRID_COL];
    
    memset(verticalEdges, 0, sizeof(verticalEdges));
-   memset(horizontalEdges, 0, sizeof(verticalEdges));
+   memset(horizontalEdges, 0, sizeof(horizontalEdges));
    
    NumericVector feature(N_EDGES);
-   
+
    for(int r=1; r<coords.nrow(); r++){
      float SLat = coords(r-1,1);
      float SLon = coords(r-1,0);
@@ -170,7 +170,7 @@ NumericVector coordsToFeature(NumericMatrix coords) {
      int col = std::floor((SLon-GRID_LONG_MIN)/CELL_WIDTH);
      
      // Ignore coordinates out of bound
-     if(row > N_GRID_ROW || col > N_GRID_COL) continue;
+     if(row >= N_GRID_ROW || col >= N_GRID_COL || row < 0 || col <0) continue;
      
      float delta_lat = FLat - SLat;
      float delta_lon = FLon - SLon;
@@ -191,7 +191,7 @@ NumericVector coordsToFeature(NumericMatrix coords) {
        horizontalEdges[row+1][col].neg++;
      }       
    }
-   
+
    int iterator = 0;
    for(int i=0; i<N_GRID_COL+1; i++){
      for(int j=0; j<N_GRID_ROW; j++){
