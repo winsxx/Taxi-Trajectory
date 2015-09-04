@@ -17,10 +17,11 @@ rm(list=ls())
 # Sampling train set
 set.seed(0)
 resample <- FALSE
+
 train.sample.path <- "data/train_sample.csv"
 if(resample){
   train.all  <- read_csv("data/train.csv")
-  train.sample.size <- 100000
+  train.sample.size <- 30000
   train.sample.index <- sample(1:nrow(train.all), train.sample.size)
   train.sample <- train.all[train.sample.index,]
   rm(train.all)
@@ -32,6 +33,13 @@ if(resample){
 load(train.sample.path)
 rm(train.sample.path)
 rm(resample)
+
+test.own.amount <- 500
+boundary <- nrow(train.sample)-test.own.amount;
+test.own.data <- train.sample[(boundary+1):nrow(train.sample),]
+train.sample <- train.sample[1:boundary,]
+rm(boundary)
+rm(test.own.amount)
 
 # Process data type
 train.sample$CALL_TYPE <- factor(train.sample$CALL_TYPE, levels=c("A","B","C"))
@@ -99,6 +107,7 @@ train.points.list <- apply(train.sample.clean, 1, function(row){
 rm(train.sample.clean)
 train.end.points <- lapply(train.points.list, last_position_from_matrix)
 train.end.points <- do.call("rbind",train.end.points)
+# initialize!! Important
 initializeClassMapping(as.matrix(train.end.points))
 train.class <- apply(train.end.points,1,CoordinateToClass)
 train.class <- as.data.frame(train.class)
@@ -116,13 +125,32 @@ names(train.feature) <- getEdgesFeatureLabel()
 train.feature <- cbind(train.feature, train.class)
 rm(train.class)
 
+# Construct own test set
+test.own.endpoints <- apply(test.own.data, 1, last_position)
+test.own.endpoints <- do.call("rbind", test.own.endpoints)
+test.own.endpoints <- as.data.frame(test.own.endpoints);
+test.own.data <- test.own.data[test.own.data$POLYLINE != "[]",]
+test.own.ans <- data.frame(TRIP_ID = test.own.data[,1],
+                            LATITUDE = test.own.endpoints[,2], 
+                            LONGITUDE = test.own.endpoints[,1])
+write_csv(test.own.ans, "output/test_own.csv") 
+
 # Construct structured test data
-test  <- read_csv("data/test.csv")
+TEST_OWN <- FALSE
+if(TEST_OWN){
+  test <- test.own.data
+} else {
+  test  <- read_csv("data/test.csv")
+}
+
 test$CALL_TYPE <- factor(test$CALL_TYPE, levels=c("A","B","C"))
 test$DAY_TYPE <- factor(test$DAY_TYPE, levels=c("A","B","C"))
 test$MISSING_DATA <- test$MISSING_DATA == "True"
 test.points.list <- apply(test, 1, function(row){
   pos <- positions(row)
+  if(TEST_OWN){
+    pos <- partial_position(pos)
+  } 
   return(outlierRemovedCoords(as.matrix(pos)))
 })
 test.feature.list <- lapply(test.points.list, coordsToFeature)
@@ -131,3 +159,4 @@ test.feature <- do.call("rbind",test.feature.list)
 rm(test.feature.list)
 test.feature <- as.data.frame(test.feature)
 names(test.feature) <- getEdgesFeatureLabel()
+

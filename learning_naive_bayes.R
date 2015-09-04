@@ -13,8 +13,7 @@ set.seed(0)
 
 class.index <- ncol(train.feature)
 model <- naiveBayes(x=train.feature[,-class.index], 
-                    y=as.factor(train.feature[,class.index]), 
-                    laplace=1)
+                    y=as.factor(train.feature[,class.index]))
 
 prediction <- predict(model, test.feature)
 
@@ -31,3 +30,5 @@ submission$LATITUDE <- format(round(as.numeric(as.character(submission$LATITUDE)
 submission$LONGITUDE <- format(round(as.numeric(as.character(submission$LONGITUDE)),6), nsmall=6)
 
 write_csv(submission, "output/submission.csv") 
+
+destinationMining.Evaluation("output/submission.csv", "output/test_own.csv")
