@@ -7,16 +7,16 @@
 #include <cmath>
 using namespace Rcpp;
 
-const float GRID_LAT_MIN = 41.00;
-const float GRID_LAT_MAX = 41.30;
-const float GRID_LONG_MIN  = -8.75;
-const float GRID_LONG_MAX  = -8.40;
+const float GRID_LAT_MIN = 41.11;
+const float GRID_LAT_MAX = 41.26;
+const float GRID_LONG_MIN  = -8.72;
+const float GRID_LONG_MAX  = -8.54;
 const float OUTLIER_LAT_MIN = 40.00;
 const float OUTLIER_LAT_MAX = 42.00;
 const float OUTLIER_LONG_MIN  = -9.00;
 const float OUTLIER_LONG_MAX  = -8.00;
 const int N_GRID_ROW = 10;
-const int N_GRID_COL = 10;
+const int N_GRID_COL = 12;
 const float CELL_WIDTH  = (GRID_LONG_MAX-GRID_LONG_MIN)/N_GRID_COL;
 const float CELL_HEIGHT = (GRID_LAT_MAX-GRID_LAT_MIN)/N_GRID_ROW;
 const int N_EDGES = ((N_GRID_COL+1)*N_GRID_ROW + (N_GRID_ROW+1)*N_GRID_COL)*2;
@@ -58,17 +58,17 @@ void initializeClassMapping(NumericMatrix lastCoords){
      // Ignore coordinates out of bound
      if(row >= N_GRID_ROW || col >= N_GRID_COL || row < 0 || col < 0){
        bool isOutlier = false;
-       if(lat<OUTLIER_LAT_MIN || lat>OUTLIER_LAT_MAX) isOutlier = true;
-       if(lon<OUTLIER_LONG_MIN || lon>OUTLIER_LONG_MAX) isOutlier = true;
+       if(lat<=OUTLIER_LAT_MIN || lat>=OUTLIER_LAT_MAX) isOutlier = true;
+       if(lon<=OUTLIER_LONG_MIN || lon>=OUTLIER_LONG_MAX) isOutlier = true;
        if(isOutlier){
          continue;
        } else{
          int latP = 1;
          int lonP = 1;
-         if (lat<GRID_LAT_MIN) latP = 0;
-         if (lat>GRID_LAT_MAX) latP = 2;
-         if (lon<GRID_LONG_MIN) lonP = 0;
-         if (lon>GRID_LONG_MAX) lonP = 2;
+         if (lat<=GRID_LAT_MIN) latP = 0;
+         if (lat>=GRID_LAT_MAX) latP = 2;
+         if (lon<=GRID_LONG_MIN) lonP = 0;
+         if (lon>=GRID_LONG_MAX) lonP = 2;
          if(latP!=1 || lonP!=1){
            countOcMat[latP][lonP]++;
            ocMat[latP][lonP].lat = ocMat[latP][lonP].lat + (lat - ocMat[latP][lonP].lat)/countOcMat[latP][lonP];
@@ -127,15 +127,15 @@ String CoordinateToClass(NumericVector coor){
    bool isOuter = false;
    float lat = coor[1];
    float lon = coor[0];
-   if(lat<GRID_LAT_MIN || lat>GRID_LAT_MAX) isOuter = true;
-   if(lon<GRID_LONG_MIN || lon>GRID_LONG_MAX) isOuter = true;
+   if(lat<=GRID_LAT_MIN || lat>=GRID_LAT_MAX) isOuter = true;
+   if(lon<=GRID_LONG_MIN || lon>=GRID_LONG_MAX) isOuter = true;
    if(isOuter){
      int latP = 1;
      int lonP = 1;
-     if (lat<GRID_LAT_MIN) latP = 0;
-     if (lat>GRID_LAT_MAX) latP = 2;
-     if (lon<GRID_LONG_MIN) lonP = 0;
-     if (lon>GRID_LONG_MAX) lonP = 2;
+     if (lat<=GRID_LAT_MIN) latP = 0;
+     if (lat>=GRID_LAT_MAX) latP = 2;
+     if (lon<=GRID_LONG_MIN) lonP = 0;
+     if (lon>=GRID_LONG_MAX) lonP = 2;
 
      std::ostringstream name;
      name << "O"<< latP << lonP;
@@ -249,8 +249,8 @@ NumericMatrix outlierRemovedCoords(NumericMatrix coords){
   std::vector<Coordinate> notOutlier;
   for(int i=0; i<coords.nrow(); i++){
     bool isOutlier = false;
-    if(coords(i,1)<OUTLIER_LAT_MIN || coords(i,1)>OUTLIER_LAT_MAX) isOutlier = true;
-    if(coords(i,0)<OUTLIER_LONG_MIN || coords(i,0)>OUTLIER_LONG_MAX) isOutlier = true;
+    if(coords(i,1)<=OUTLIER_LAT_MIN || coords(i,1)>=OUTLIER_LAT_MAX) isOutlier = true;
+    if(coords(i,0)<=OUTLIER_LONG_MIN || coords(i,0)>=OUTLIER_LONG_MAX) isOutlier = true;
     if(!isOutlier){
       Coordinate temp;
       temp.lat = coords(i,1);

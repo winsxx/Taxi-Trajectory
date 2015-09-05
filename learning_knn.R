@@ -4,30 +4,18 @@
 # Depedency
 #####
 source(feature.R)
-source("evaluation_script.R")
-library(randomForest)
+library(class)
 
 #####
 # Script to Run
 #####
-getMostImportantFeature <- function(rfObject, numOfFeatures){
-  imp <- importance(rfObject)
-  imp <- data.frame(imp)
-  imp <- imp[order(-imp$MeanDecreaseGini),,drop=F]
-  return(row.names(imp)[1:numOfFeatures])
-}
-
 set.seed(0)
 
-trees.amount <- 100
-
 class.index <- ncol(train.feature)
-rf <- randomForest(x = train.feature[,-class.index],
-                   y = droplevels(train.feature[,class.index]),
-                   ntree = trees.amount,
-                   do.trace = T)
-
-prediction <- predict(rf, test.feature)
+system.time(prediction <- knn(train.feature[,-class.index], 
+                              test.feature, 
+                              train.feature[,class.index], 
+                              k=15))
 
 predicted.coords.list <-lapply(as.character(prediction), classToCoordinate)
 predicted.coords <- do.call("rbind",predicted.coords.list)
@@ -46,4 +34,3 @@ write_csv(submission, "output/submission.csv")
 if(TEST_OWN){
   destinationMining.Evaluation("output/submission.csv", "output/test_own.csv")
 }
-
