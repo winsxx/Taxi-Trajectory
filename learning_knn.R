@@ -3,7 +3,7 @@
 #####
 # Depedency
 #####
-source(feature.R)
+source("feature.R")
 library(class)
 
 #####
@@ -15,7 +15,7 @@ class.index <- ncol(train.feature)
 system.time(prediction <- knn(train.feature[,-class.index], 
                               test.feature, 
                               train.feature[,class.index], 
-                              k=15))
+                              k=3))
 
 predicted.coords.list <-lapply(as.character(prediction), classToCoordinate)
 predicted.coords <- do.call("rbind",predicted.coords.list)

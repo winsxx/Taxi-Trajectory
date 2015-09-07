@@ -34,7 +34,7 @@ load(train.sample.path)
 rm(train.sample.path)
 rm(resample)
 
-test.own.amount <- 500
+test.own.amount <- 1500
 boundary <- nrow(train.sample)-test.own.amount;
 test.own.data <- train.sample[(boundary+1):nrow(train.sample),]
 train.sample <- train.sample[1:boundary,]
@@ -87,6 +87,10 @@ is_not_outlier <- function(row){
   }
 }
 
+is_outside_grid <- function(class){
+  return (substr(class,1,1)=="O")
+}
+
 daytype_of_week <- function(mTimestamp){
   mDat <- ((mTimestamp %/% 86400)+4) %% 7
   ifelse((mDat == 0 | mDat==6) , "W" ,"D")
@@ -115,7 +119,6 @@ trajectory.end.points <- apply(train.sample, 1, last_position)
 trajectory.end.points <- do.call("rbind", trajectory.end.points)
 
 # Construct structured training data
-WITH_TIME <- TRUE
 
 train.sample.outlier.index <- apply(train.sample,1,is_not_outlier)
 train.sample.clean <- train.sample[train.sample.outlier.index,]
@@ -143,11 +146,14 @@ train.feature <- do.call("rbind",train.feature.list)
 rm(train.feature.list)
 train.feature <- as.data.frame(train.feature)
 names(train.feature) <- getEdgesFeatureLabel()
-if(WITH_TIME){
-  train.feature <- cbind(train.feature, time_feature(train.sample.clean), train.class)
-}else{
-  train.feature <- cbind(train.feature, train.class)
+for(col in names(train.feature)){
+  train.feature[,col] <- factor(train.feature[,col], levels=c("0","1","2"))
 }
+
+train.feature <- cbind(train.feature, 
+                       time_feature(train.sample.clean),
+                       CALL_TYPE = train.sample.clean$CALL_TYPE,
+                       train.class)
 
 rm(train.class)
 
@@ -180,17 +186,21 @@ test.points.list <- apply(test, 1, function(row){
   return(outlierRemovedCoords(as.matrix(pos)))
 })
 test.feature.list <- lapply(test.points.list, coordsToFeature)
+last.location.benchmark <- lapply(test.points.list, last_position_from_matrix)
+last.location.benchmark <- do.call("rbind",last.location.benchmark)
+last.location.benchmark  <- as.data.frame(last.location.benchmark)
 rm(test.points.list)
 test.feature <- do.call("rbind",test.feature.list)
 rm(test.feature.list)
 test.feature <- as.data.frame(test.feature)
 names(test.feature) <- getEdgesFeatureLabel()
-if(WITH_TIME){
-  test.feature <- cbind(test.feature, time_feature(test))
-  levels(test.feature$DOW) <- levels(train.feature$DOW)
-  levels(test.feature$HOD) <- levels(train.feature$HOD)
-} else {
-  test.feature <- cbind(test.feature)
+for(col in names(test.feature)){
+  test.feature[,col] <- factor(test.feature[,col], levels=c("0","1","2"))
 }
+
+test.feature <- cbind(test.feature, time_feature(test), CALL_TYPE=test$CALL_TYPE)
+levels(test.feature$DOW) <- levels(train.feature$DOW)
+levels(test.feature$HOD) <- levels(train.feature$HOD)
+
 
 

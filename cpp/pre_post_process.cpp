@@ -15,11 +15,11 @@ const float OUTLIER_LAT_MIN = 40.00;
 const float OUTLIER_LAT_MAX = 42.00;
 const float OUTLIER_LONG_MIN  = -9.00;
 const float OUTLIER_LONG_MAX  = -8.00;
-const int N_GRID_ROW = 10;
-const int N_GRID_COL = 12;
+const int N_GRID_ROW = 15;
+const int N_GRID_COL = 18;
 const float CELL_WIDTH  = (GRID_LONG_MAX-GRID_LONG_MIN)/N_GRID_COL;
 const float CELL_HEIGHT = (GRID_LAT_MAX-GRID_LAT_MIN)/N_GRID_ROW;
-const int N_EDGES = ((N_GRID_COL+1)*N_GRID_ROW + (N_GRID_ROW+1)*N_GRID_COL)*2;
+const int N_EDGES = ((N_GRID_COL+1)*N_GRID_ROW + (N_GRID_ROW+1)*N_GRID_COL);
 
 typedef struct{
   float lat;
@@ -195,17 +195,29 @@ NumericVector coordsToFeature(NumericMatrix coords) {
    int iterator = 0;
    for(int i=0; i<N_GRID_COL+1; i++){
      for(int j=0; j<N_GRID_ROW; j++){
-       feature[iterator] = verticalEdges[i][j].pos;
-       iterator++;
-       feature[iterator] = verticalEdges[i][j].neg;
+       if(verticalEdges[i][j].pos == 0 && verticalEdges[i][j].neg==0){
+         feature[iterator] = 0;
+       } else {
+         if(verticalEdges[i][j].pos > verticalEdges[i][j].neg){
+           feature[iterator] = 1;
+         } else {
+           feature[iterator] = 2;
+         }
+       }
        iterator++;
      }
    }
    for(int i=0; i<N_GRID_ROW+1; i++){
      for(int j=0; j<N_GRID_COL; j++){
-       feature[iterator] = horizontalEdges[i][j].pos;
-       iterator++;
-       feature[iterator] = horizontalEdges[i][j].neg;
+       if(horizontalEdges[i][j].pos == 0 && horizontalEdges[i][j].neg == 0){
+         feature[iterator] = 0;
+       } else {
+         if(horizontalEdges[i][j].pos > horizontalEdges[i][j].neg){
+           feature[iterator] = 1;
+         } else {
+           feature[iterator] = 2;
+         }
+       }
        iterator++;
      }
    }
@@ -220,11 +232,7 @@ CharacterVector getEdgesFeatureLabel(){
    for(int i=0; i<N_GRID_COL+1; i++){
      for(int j=0; j<N_GRID_ROW; j++){
        stream.str(std::string());
-       stream << "V" << i+1 << "N" << j+1 << "P";
-       labels[iterator] = stream.str();
-       iterator++;
-       stream.str(std::string());
-       stream << "V" << i+1 << "N" << j+1 << "N";
+       stream << "V" << i+1 << "N" << j+1;
        labels[iterator] = stream.str();
        iterator++;
      }
@@ -232,17 +240,14 @@ CharacterVector getEdgesFeatureLabel(){
    for(int i=0; i<N_GRID_ROW+1; i++){
      for(int j=0; j<N_GRID_COL; j++){
        stream.str(std::string());
-       stream << "H" << i+1 << "N" << j+1 << "P";
-       labels[iterator] = stream.str();
-       iterator++;
-       stream.str(std::string());
-       stream << "H" << i+1 << "N" << j+1 << "N";
+       stream << "H" << i+1 << "N" << j+1;
        labels[iterator] = stream.str();
        iterator++;
      }
    }
    return labels;
 }
+
 
 // [[Rcpp::export]]
 NumericMatrix outlierRemovedCoords(NumericMatrix coords){
