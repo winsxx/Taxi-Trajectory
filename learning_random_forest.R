@@ -22,13 +22,13 @@ set.seed(0)
 trees.amount <- 200
 
 class.index <- ncol(train.feature)
-rf <- randomForest(x = train.feature[,-class.index],
+rf <- randomForest(x = train.feature[,c(!train.feature.var0,FALSE)],
                    y = droplevels(train.feature[,class.index]),
                    ntree = trees.amount,
                    nodesize = 3,
                    do.trace = T)
 
-prediction <- predict(rf, test.feature)
+prediction <- predict(rf, test.feature[,!train.feature.var0])
 
 outside.grid.index <- is_outside_grid(prediction)
 predicted.coords.list <-lapply(as.character(prediction), classToCoordinate)

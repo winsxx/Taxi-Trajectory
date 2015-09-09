@@ -154,6 +154,7 @@ train.feature <- cbind(train.feature,
                        time_feature(train.sample.clean),
                        CALL_TYPE = train.sample.clean$CALL_TYPE,
                        train.class)
+train.feature.var0 <- unlist(lapply(train.feature[,-ncol(train.feature)], function(x) 0 == var(if (is.factor(x)) as.integer(x) else x)))
 
 rm(train.class)
 
