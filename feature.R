@@ -16,12 +16,12 @@ rm(list=ls())
 
 # Sampling train set
 set.seed(0)
-resample <- FALSE
+resample <- TRUE
 
 train.sample.path <- "data/train_sample.csv"
 if(resample){
   train.all  <- read_csv("data/train.csv")
-  train.sample.size <- 30000
+  train.sample.size <- 200000
   train.sample.index <- sample(1:nrow(train.all), train.sample.size)
   train.sample <- train.all[train.sample.index,]
   rm(train.all)
@@ -169,7 +169,7 @@ test.own.ans <- data.frame(TRIP_ID = test.own.data[,1],
 write_csv(test.own.ans, "output/test_own.csv") 
 
 # Construct structured test data
-TEST_OWN <- FALSE
+TEST_OWN <- TRUE
 if(TEST_OWN){
   test <- test.own.data
 } else {
